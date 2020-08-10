@@ -18,6 +18,10 @@ mix.js("resources/js/app.js", "public/js/app.js")
     .tailwind("./tailwind.config.js")
     .sourceMaps();
 
+mix.scripts([
+    'public/js/index.js'
+], 'public/js/all.js');   
+    
 if (mix.inProduction()) {
     mix.version();
 }

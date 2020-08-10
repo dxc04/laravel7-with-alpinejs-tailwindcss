@@ -1,4 +1,6 @@
 import 'alpinejs';
+window.Papa = require('papaparse');
+window.Handlebars = require("handlebars");
 
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
