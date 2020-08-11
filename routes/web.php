@@ -14,3 +14,4 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::view('/', 'welcome')->name('home');
+Route::post('/setup/campaign','IndexController@setupCampaign')->name('setup.campaign');

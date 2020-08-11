@@ -5,17 +5,41 @@ function csvData() {
         header: [],
         rows: [],
         dataList: [],
-        emailCol: null,
+        emailCol: 'null',
         subject: null,
         message: null,
+        isLoading: false,
         isShowColMenu: false,
+        isMappingDone: false,
+        selectedTplKey: "null",
+        selectedTpl: {},
+        templates: [
+            {
+                name: 'free-ebook',
+                templates: {
+                    subject: `{{#if firstName}}{{firstName}} - our lucky friend!{{else}}Our lucky friend!{{/if}}`,
+                    message: `Hello {{firstName}}, we have exciting news for you! We are sending free ebook to your email {{email}}.`
+                },
+                requiredVars: [{key: 'firstName', label: 'First Name'}, {key: 'email', label: 'Email'}],
+                mappedVars: {firstName: 'null', email: this.emailCol}
+            },
+            {
+                name: 'new-product',
+                templates: {
+                    subject: `{{#if firstName}}{{firstName}} - our lucky friend!{{else}}Our lucky friend!{{/if}}`,
+                    message: `Hello {{firstName}}, we have exciting news for you! We are sending free ebook of our new product to your email {{email}}.`
+                },
+                requiredVars: [{key: 'firstName', label: 'First Name'}, {key: 'email', label: 'Email'}],
+                mappedVars: {firstName: 'null', email: this.emailCol}
+            }
+        ],
         async parse() {
             var fileUpload = document.getElementById("fileUpload");
             var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv|.txt)$/;
             if (regex.test(fileUpload.value.toLowerCase())) {
                 this.rows = await this.paparse(fileUpload.files[0], { skipEmptyLines: true });
-                this.header = Object.keys(this.rows[0]);
                 this.rows.pop();
+                this.header = Object.keys(this.rows[0]);
                 this.parseEmail(this.rows[0]);
             } else {
                 alert("Please upload a valid CSV file.");
@@ -66,6 +90,62 @@ function csvData() {
             else {
                 this.active = 'generate-section';
             }
+        },
+        backToParse() {
+            this.active = 'parse-section'; 
+            this.fileName = '';
+        },
+        updateTpl() {
+            this.selectedTpl = this.templates.find(tpl => tpl.name === this.selectedTplKey);
+            this.subject = this.selectedTpl.templates.subject;
+            this.message = this.selectedTpl.templates.message;
+            this.selectedTpl.mappedVars.email = this.emailCol
+        },
+        mappingDone() {
+            this.updateTpl();
+            const mappedVars = {};
+            for (const key in this.selectedTpl.mappedVars) {
+                if (this.selectedTpl.mappedVars[key] !== 'null') {
+                    mappedVars[key] = this.selectedTpl.mappedVars[key];
+                }
+            }
+
+            const re = new RegExp(Object.keys(mappedVars).join("|"),"gi");
+            this.subject = this.subject.replace(re, function(matched){
+                return mappedVars[matched];
+            });
+            this.message = this.message.replace(re, function(matched){
+                return mappedVars[matched];
+            });
+        },
+        save() {
+            let url = '/setup/campaign';
+            let token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            this.isLoading = true;
+            fetch(url, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json, text-plain, */*",
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRF-TOKEN": token
+                        },
+                    method: 'post',
+                    credentials: "same-origin",
+                    body: JSON.stringify({
+                        contacts: this.rows,
+                        templates: this.templates,
+                        data: this.dataList,
+                        emailCol: this.emailCol,
+                        campaingName: this.selectedTpl.name
+                    })
+                })
+                .then((data) => {
+                    this.isLoading = false;
+                    this.active = 'finished-section';
+                })
+                .catch(function(error) {
+                    //console.log(error);
+                });
         }
     }
 }
