@@ -22,3 +22,9 @@ npm install
 ```
 npm run dev
 ```
+
+```
+php artisan serve
+```
+
+visit http://localhost:5000
