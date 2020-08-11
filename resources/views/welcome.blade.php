@@ -232,7 +232,6 @@
                     <div class="flex flex-wrap w-full" >
                         <div class="success-hero-image">
                             <div class="hero-text">
-                               
                             </div>
                         </div>
                     </div>
